@@ -1,0 +1,35 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "contracts/CrowdFunding.sol": {
+      "content": "// SPDX-License-Identifier: UNLICENSED\npragma solidity ^0.8.9;\n\n\ncontract CrowdFunding{\n   \n   uint public noOfCampaigns;\n   uint public totalDonation;\n   address public admin;\n   uint ID = 1;\n\n   event CampaignCreated(uint id);\n   event Donation(uint amount, uint when);\n   event Withdrawal(uint amount, uint when);\n\n   constructor() {\n    admin = msg.sender;\n   }\n\n   struct Campaign {\n    uint campaignID;\n    uint noOfDonations;\n    uint totalAmountDonated;\n    uint campaignTarget;\n    bool isApproved;\n    string campaignName;\n    address owner;\n   }\n\n   mapping (uint => Campaign) public Campaigns;\n\n   modifier onlyAdmin {\n    require(msg.sender == admin, \"Only admin can approve campaign\"); \n    _;\n   }\n\n   function Donate(uint _campaignID) payable  external {\n\n    Campaign storage s = Campaigns[_campaignID];\n\n    require(msg.value > 0, \"Please donate to this cause\");\n    // require(_campaignID > 000, \"Please specify campaign to donate to\");\n    require(s.isApproved == true, \"You can only donate to approved Campaigns\");\n    require(msg.value > 100 wei, \"please you cant donate less than 100 wei\");\n\n\n    s.noOfDonations++;\n    s.totalAmountDonated += msg.value;\n    totalDonation += msg.value;\n\n    emit Donation(msg.value, block.timestamp);\n\n   }\n\n   function createCampaign(string memory _campaignName, address _campaignOwner, uint _campaignTarget) external {\n    uint256 _id = ID;\n    Campaign storage s = Campaigns[_id];\n\n    s.campaignID = _id;\n    s.campaignName = _campaignName;\n    s.campaignTarget = _campaignTarget;\n    s.noOfDonations = 0;\n    s.totalAmountDonated = 0;\n    s.owner = _campaignOwner;\n\n    noOfCampaigns++;\n\n    ID++;\n\n    emit CampaignCreated(_id);\n   }\n\n   function ApproveCampaign(uint _campaignID) external onlyAdmin {\n    Campaign storage s = Campaigns[_campaignID];\n    s.isApproved = true;\n   }\n\n   function Withdraw(uint _campaignID , address _campaignOwner) external {\n    Campaign memory s = Campaigns[_campaignID];\n    address _owner = s.owner;\n\n    require(_campaignOwner == _owner, \"Only owner can withdraw\");\n    require(_owner != address(0), \"invalid owner address\");\n\n    uint amountToWithdraw;\n    amountToWithdraw = s.totalAmountDonated;\n    s.totalAmountDonated == 0;\n    \n    if(s.totalAmountDonated < s.campaignTarget) {\n      payable(_owner).transfer(amountToWithdraw);\n    } else {\n      uint deduction;\n      deduction = amountToWithdraw * 7/100;\n      amountToWithdraw = amountToWithdraw - deduction;\n      \n     payable(_owner).transfer(amountToWithdraw);\n    }\n\n    emit Withdrawal(amountToWithdraw, block.timestamp);\n   }\n}"
+    }
+  },
+  "settings": {
+    "optimizer": {
+      "enabled": false,
+      "runs": 200
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "abi",
+          "evm.bytecode",
+          "evm.deployedBytecode",
+          "evm.methodIdentifiers",
+          "metadata",
+          "devdoc",
+          "userdoc",
+          "storageLayout",
+          "evm.gasEstimates"
+        ],
+        "": [
+          "ast"
+        ]
+      }
+    },
+    "metadata": {
+      "useLiteralContent": true
+    }
+  }
+}
